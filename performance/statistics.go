@@ -19,7 +19,7 @@ type StatisticsTime struct {
 	//AvgTime time.Duration
 	MaxTime time.Duration
 	MinTime time.Duration
-	Count int64
+	Count   int64
 }
 
 func (stat *StatisticsTime) AddStatisticsTime(src *StatisticsTime) {
@@ -43,7 +43,7 @@ func (stat *StatisticsTime) SetTime(src time.Duration) {
 		stat.MaxTime = src
 		stat.MinTime = src
 	} else {
-		stat.SumTime.Add(decimal.NewFromInt(int64(src)))
+		stat.SumTime = stat.SumTime.Add(decimal.NewFromInt(int64(src)))
 		if src > stat.MaxTime {
 			stat.MaxTime = src
 		}
