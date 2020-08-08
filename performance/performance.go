@@ -12,61 +12,45 @@ import (
 
 const (
 	LE01MillSECOND = iota
-	LE02MillSECOND
-	LE03MillSECOND
-	LE04MillSECOND
 	LE05MillSECOND
 	LE10MillSECOND
-	LE20MillSECOND
-	LE30MillSECOND
+	LE100MillSECOND
+	LE500MillSECOND
 	LE01SECOND
-	LE02SECOND
-	LE03SECOND
-	LE04SECOND
-	LE05SECOND
 	LE10SECOND
-	LE20SECOND
 	LE30SECOND
 	LE01MINUTE
-	GT01MINUTE
+	LE05MINUTE
+	LE10MINUTE
+	GT10MINUTE
 )
 
 var _RangeName = []string{
 	"LE  1  ms",
-	"LE  2  ms",
-	"LE  3  ms",
-	"LE  4  ms",
 	"LE  5  ms",
 	"LE 10  ms",
-	"LE 20  ms",
-	"LE 30  ms",
+	"LE100  ms",
+	"LE500  ms",
 	"LE  1 Sec",
-	"LE  2 Sec",
-	"LE  3 Sec",
-	"LE  4 Sec",
-	"LE  5 Sec",
 	"LE 10 Sec",
-	"LE 20 Sec",
 	"LE 30 Sec",
 	"LE  1 Min",
-	"GT  1 Min",
+	"LE  5 Min",
+	"LE 10 Min",
+	"GT 10 Min",
 }
 
 const (
-	SECOND30     = 30 * time.Second
-	SECOND20     = 20 * time.Second
-	SECOND10     = 10 * time.Second
-	SECOND05     = 5 * time.Second
-	SECOND04     = 4 * time.Second
-	SECOND03     = 3 * time.Second
-	SECOND02     = 2 * time.Second
-	MillSECOND30 = 30 * time.Millisecond
-	MillSECOND20 = 20 * time.Millisecond
-	MillSECOND10 = 10 * time.Millisecond
-	MillSECOND05 = 5 * time.Millisecond
-	MillSECOND04 = 4 * time.Millisecond
-	MillSECOND03 = 3 * time.Millisecond
-	MillSECOND02 = 2 * time.Millisecond
+	MINUTE10      = 10 * time.Minute
+	MINUTE05      = 5 * time.Minute
+	MINUTE01      = time.Minute
+	SECOND30      = 30 * time.Second
+	SECOND01      = time.Second
+	MillSECOND500 = 500 * time.Millisecond
+	MillSECOND100 = 100 * time.Millisecond
+	MillSECOND10  = 10 * time.Millisecond
+	MillSECOND05  = 5 * time.Millisecond
+	MillSECOND01  = time.Millisecond
 )
 
 var lock atomic.Bool
@@ -88,7 +72,7 @@ type performance struct {
 }
 
 func NewPerformance(routineCnt int64) {
-	perfData := make([]Statistics, GT01MINUTE+1)
+	perfData := make([]Statistics, GT10MINUTE+1)
 	_perf = &performance{
 		perfChan:  make(chan perfI, routineCnt+1),
 		perfData:  perfData,
@@ -122,7 +106,7 @@ func Wait(sTime, eTime time.Time) {
 		Transaction: StatisticsTime{
 			MinTime: math.MaxInt64,
 		},
-		Response:    StatisticsTime{
+		Response: StatisticsTime{
 			MinTime: math.MaxInt64,
 		},
 		BuildClient: StatisticsTime{
@@ -131,7 +115,7 @@ func Wait(sTime, eTime time.Time) {
 	}
 	outStat.WriteString(fmt.Sprintf("\nperformance statistics :\n"))
 
-	for idx := GT01MINUTE; idx >= 0; idx-- {
+	for idx := GT10MINUTE; idx >= 0; idx-- {
 		data := &_perf.perfData[idx]
 		if data.Count <= 0 {
 			continue
@@ -146,13 +130,13 @@ func Wait(sTime, eTime time.Time) {
 
 		cnt++
 	}
-	if st.Transaction.MinTime  == math.MaxInt64 {
+	if st.Transaction.MinTime == math.MaxInt64 {
 		st.Transaction.MinTime = 0
 	}
-	if st.Response.MinTime  == math.MaxInt64 {
+	if st.Response.MinTime == math.MaxInt64 {
 		st.Response.MinTime = 0
 	}
-	if st.BuildClient.MinTime  == math.MaxInt64 {
+	if st.BuildClient.MinTime == math.MaxInt64 {
 		st.BuildClient.MinTime = 0
 	}
 	outTimes.WriteString(fmt.Sprintf("-----------------------\nTotal Count: %v\n\n", st.Count))
@@ -174,42 +158,28 @@ func (perf *performance) Run() {
 		useTime, respTime, bTime := perfData.GetUseTime()
 
 		var timeRange int
-		if respTime < time.Millisecond {
+		if respTime < MillSECOND01 {
 			timeRange = LE01MillSECOND
-		} else if respTime < MillSECOND02 {
-			timeRange = LE02MillSECOND
-		} else if respTime < MillSECOND03 {
-			timeRange = LE03MillSECOND
-		} else if respTime < MillSECOND04 {
-			timeRange = LE04MillSECOND
 		} else if respTime < MillSECOND05 {
 			timeRange = LE05MillSECOND
 		} else if respTime < MillSECOND10 {
 			timeRange = LE10MillSECOND
-		} else if respTime < MillSECOND20 {
-			timeRange = LE20MillSECOND
-		} else if respTime < MillSECOND30 {
-			timeRange = LE30MillSECOND
-		} else if respTime < time.Second {
+		} else if respTime < MillSECOND100 {
+			timeRange = LE100MillSECOND
+		} else if respTime < MillSECOND500 {
+			timeRange = LE500MillSECOND
+		} else if respTime < SECOND01 {
 			timeRange = LE01SECOND
-		} else if respTime < SECOND02 {
-			timeRange = LE02SECOND
-		} else if respTime < SECOND03 {
-			timeRange = LE03SECOND
-		} else if respTime < SECOND04 {
-			timeRange = LE04SECOND
-		} else if respTime < SECOND05 {
-			timeRange = LE05SECOND
-		} else if respTime < SECOND10 {
-			timeRange = LE10SECOND
-		} else if respTime < SECOND20 {
-			timeRange = LE20SECOND
 		} else if respTime < SECOND30 {
 			timeRange = LE30SECOND
-		} else if respTime < time.Minute {
+		} else if respTime < MINUTE01 {
 			timeRange = LE01MINUTE
+		} else if respTime < MINUTE05 {
+			timeRange = LE01MINUTE
+		} else if respTime < MINUTE10 {
+			timeRange = LE10MINUTE
 		} else {
-			timeRange = GT01MINUTE
+			timeRange = GT10MINUTE
 		}
 
 		dataStatus := perfData.GetStatus()

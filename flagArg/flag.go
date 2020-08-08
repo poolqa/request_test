@@ -21,7 +21,7 @@ func InitFlag(f *FlagArg) {
 	flag.StringVar(&f.Url, "u", "", "target `url`")
 
 	flag.BoolVar(&f.DebugLog, "d", false, "show debug log")
-	flag.BoolVar(&f.ReportDetail, "r", false, "show those routine's requests detail at report log,\nbut it wall use more and more memory.")
+	//flag.BoolVar(&f.ReportDetail, "r", false, "show those routine's requests detail at report log,\nbut it wall use more and more memory.")
 	flag.BoolVar(&f.PreHeat, "w", false, "waiting all routines stand-by.")
 	flag.Int64Var(&f.PrintInterval, "i", 1, "print interval for process request count time.")
 	flag.BoolVar(&f.Help, "h", false, "this help")
@@ -44,8 +44,8 @@ type FlagArg struct {
 }
 
 func (f *FlagArg) Usage() {
-	_, _ = fmt.Fprintf(os.Stderr, `Transactions Request Pressure Test/ v0.0.1
-Usage: pressure -c concurrency -n requests -t timeLimit -m method -u url -[dh]
+	_, _ = fmt.Fprintf(os.Stderr, `Transactions Request Pressure Test/ v1.0.0
+Usage: pressure -c concurrency -n requests -t timeLimit -m method -u url -[dwh]
 
 Options:
 `)
@@ -89,5 +89,3 @@ func (f *FlagArg) CheckFlag() bool {
 	}
 	return true
 }
-
-
