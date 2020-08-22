@@ -26,7 +26,7 @@ func (stat *StatisticsTime) AddStatisticsTime(src *StatisticsTime) {
 	if stat.SumTime.IsZero() {
 		stat.SumTime = src.SumTime
 	} else {
-		stat.SumTime.Add(src.SumTime)
+		stat.SumTime = stat.SumTime.Add(src.SumTime)
 	}
 	stat.Count += src.Count
 	if src.MaxTime > stat.MaxTime {
