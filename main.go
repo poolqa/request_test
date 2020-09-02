@@ -26,7 +26,7 @@ var (
 
 type BotInterface interface {
 	StandBy(context.Context, *sync.WaitGroup, int64)
-	GetRunCount() int64
+	GetRunCount() (int64, int64)
 }
 
 func init() {
@@ -92,7 +92,10 @@ func main() {
 		wg.Wait()
 		done <- struct{}{}
 	}()
-	var processedCnt int64
+	var sendCnt int64
+	var doneCnt int64
+	var tmpReqCnt int64
+	var tmpRespCnt int64
 	var stop <-chan time.Time
 	ticker := time.NewTicker(time.Duration(flagArg.FlagArgs.PrintInterval) * time.Second)
 	if flagArg.FlagArgs.RunTimeSec > 0 {
@@ -109,12 +112,15 @@ loop:
 		case <-stop:
 			break loop
 		case <-ticker.C:
-			processedCnt = 0
+			sendCnt = 0
+			doneCnt = 0
 			for _, botI := range BotArray {
-				processedCnt += botI.GetRunCount()
+				tmpReqCnt, tmpRespCnt = botI.GetRunCount()
+				sendCnt += tmpReqCnt
+				doneCnt += tmpRespCnt
 			}
 			p := message.NewPrinter(language.English)
-			p.Printf("sec %v, send request count: %d\n", sec, processedCnt)
+			p.Printf("sec %v, send request count: %d, done: %d\n", sec, sendCnt, doneCnt)
 			sec += flagArg.FlagArgs.PrintInterval
 		}
 	}
@@ -122,4 +128,3 @@ loop:
 
 	performance.Wait(startTime, endTime)
 }
-

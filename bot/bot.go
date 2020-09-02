@@ -13,10 +13,11 @@ import (
 )
 
 type OrderBot struct {
-	ID       int64
-	Client   *fasthttp.Client
-	procCnt  int64
-	gId      string
+	ID      int64
+	Client  *fasthttp.Client
+	procCnt int64
+	doneCnt int64
+	gId     string
 }
 
 func (bot *OrderBot) GetRoutineId() string {
@@ -30,8 +31,8 @@ func (bot *OrderBot) GetRoutineId() string {
 	return idField
 }
 
-func (bot *OrderBot) GetRunCount() int64 {
-	return bot.procCnt
+func (bot *OrderBot) GetRunCount() (int64, int64) {
+	return bot.procCnt, bot.doneCnt
 }
 
 func (bot *OrderBot) StandBy(ctx context.Context, wg *sync.WaitGroup, runCnt int64) {
@@ -39,11 +40,11 @@ func (bot *OrderBot) StandBy(ctx context.Context, wg *sync.WaitGroup, runCnt int
 	if flagArg.FlagArgs.DebugLog {
 		fmt.Printf("routine:%v start %v...\n", bot.gId, time.Now().Format("2006/01/02 15:04:05.999999"))
 	}
-	<- ctx.Done()
+	<-ctx.Done()
 
 	for bot.procCnt = int64(1); bot.procCnt <= runCnt; bot.procCnt++ {
 		tps := &performance.Tps{
-			ID: bot.ID,
+			ID:    bot.ID,
 			STime: time.Now(),
 		}
 		// send msg
@@ -65,6 +66,7 @@ func (bot *OrderBot) StandBy(ctx context.Context, wg *sync.WaitGroup, runCnt int
 		fasthttp.ReleaseRequest(req)
 
 		performance.Push(tps)
+		bot.doneCnt++
 	}
 	wg.Done()
 }
