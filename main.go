@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttpproxy"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 	"math/rand"
@@ -62,7 +64,15 @@ func main() {
 
 	BotArray = make([]BotInterface, flagArg.FlagArgs.RoutineCount)
 
-	httpClient := &fasthttp.Client{MaxConnsPerHost: int(flagArg.FlagArgs.RoutineCount)}
+	httpClient := &fasthttp.Client{
+		MaxConnsPerHost: int(flagArg.FlagArgs.RoutineCount),
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
+	if flagArg.FlagArgs.ProxyAddr != "" {
+		httpClient.Dial = fasthttpproxy.FasthttpHTTPDialer(flagArg.FlagArgs.ProxyAddr)
+	}
 	wg := &sync.WaitGroup{}
 	done := make(chan struct{})
 	ctx, runRoutine := context.WithCancel(context.Background())
@@ -75,8 +85,9 @@ func main() {
 	// request routine start
 	for idx := int64(0); idx < flagArg.FlagArgs.RoutineCount; idx++ {
 		BotArray[idx] = &bot.OrderBot{
-			ID:     idx + 1,
-			Client: httpClient,
+			ID:            idx + 1,
+			Client:        httpClient,
+			SleepInterval: time.Duration(flagArg.FlagArgs.SleepInterval) * time.Millisecond,
 		}
 		wg.Add(1)
 		go BotArray[idx].StandBy(ctx, wg, flagArg.FlagArgs.RunCount)

@@ -13,11 +13,12 @@ import (
 )
 
 type OrderBot struct {
-	ID      int64
-	Client  *fasthttp.Client
-	procCnt int64
-	doneCnt int64
-	gId     string
+	ID            int64
+	Client        *fasthttp.Client
+	SleepInterval time.Duration
+	procCnt       int64
+	doneCnt       int64
+	gId           string
 }
 
 func (bot *OrderBot) GetRoutineId() string {
@@ -58,6 +59,7 @@ func (bot *OrderBot) StandBy(ctx context.Context, wg *sync.WaitGroup, runCnt int
 		err := bot.Client.Do(req, resp)
 		tps.ETime = time.Now()
 		if err != nil {
+			fmt.Printf("error:%v\n", err)
 			tps.RespStatus = fasthttp.StatusBadRequest
 		} else {
 			tps.RespStatus = resp.StatusCode()
@@ -67,6 +69,9 @@ func (bot *OrderBot) StandBy(ctx context.Context, wg *sync.WaitGroup, runCnt int
 
 		performance.Push(tps)
 		bot.doneCnt++
+		if bot.SleepInterval > 0 {
+			time.Sleep(bot.SleepInterval)
+		}
 	}
 	wg.Done()
 }

@@ -24,6 +24,8 @@ func InitFlag(f *FlagArg) {
 	//flag.BoolVar(&f.ReportDetail, "r", false, "show those routine's requests detail at report log,\nbut it wall use more and more memory.")
 	flag.BoolVar(&f.PreHeat, "w", false, "waiting all routines stand-by.")
 	flag.Int64Var(&f.PrintInterval, "i", 1, "print interval for process request count time.")
+	flag.Int64Var(&f.SleepInterval, "sleep", 0, "sleep msec at every request is finished.")
+	flag.StringVar(&f.ProxyAddr, "proxy", "", "proxy address.")
 	flag.BoolVar(&f.Help, "h", false, "this help")
 
 	flag.Usage = f.Usage
@@ -40,6 +42,8 @@ type FlagArg struct {
 	DebugLog      bool
 	ReportDetail  bool
 	PrintInterval int64
+	SleepInterval int64
+	ProxyAddr     string
 	Help          bool
 }
 
