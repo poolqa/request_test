@@ -139,10 +139,15 @@ func Wait(sTime, eTime time.Time) {
 	if st.BuildClient.MinTime == math.MaxInt64 {
 		st.BuildClient.MinTime = 0
 	}
+	tps := float64(0)
+	Availability := decimal.Zero
+	if st.Count > 0 {
+		tps = float64(time.Second) / float64(useTime) * float64(st.Count)
+		Availability = decimal.NewFromInt(st.Success).Div(decimal.NewFromInt(st.Count)).Mul(decimal.NewFromInt(100))
+	}
 	outTimes.WriteString(fmt.Sprintf("-----------------------\nTotal Count: %v\n\n", st.Count))
 	outTimes.WriteString(fmt.Sprintf("Use times: %v\n", useTime))
-	outTimes.WriteString(fmt.Sprintf("Tps:       %0.3f per/sec\n", float64(time.Second)/float64(useTime)*float64(st.Count)))
-	Availability := decimal.NewFromInt(st.Success).Div(decimal.NewFromInt(st.Count)).Mul(decimal.NewFromInt(100))
+	outTimes.WriteString(fmt.Sprintf("Tps:       %0.3f per/sec\n", tps))
 	outTimes.WriteString(fmt.Sprintf("Availability:  %v%%\n", Availability.StringFixed(2)))
 	outTimes.WriteString(fmt.Sprintf("Failed:  %v\n", st.Failed))
 	outTimes.WriteString(fmt.Sprintf("Connection Times\n                         %-10v     %-10v     %-10v\n", "min", "max", "avg"))
